@@ -12,6 +12,8 @@ if "dark_mode" not in st.session_state:
     st.session_state["dark_mode"] = False
 if "menu_amali" not in st.session_state:
     st.session_state["menu_amali"] = "Dashboard"
+if "selenggara_auth" not in st.session_state:
+    st.session_state["selenggara_auth"] = False
 
 # ===== FIX PATH GITHUB - WAJIB SUPAYA DATA TAK KOSONG =====
 BASE_DIR = Path(__file__).parent
@@ -286,7 +288,7 @@ with col_content:
                 <div style="background: linear-gradient(135deg, #8E24AA 0%, #6A1B9A 100%); border: 2.5px solid #FFD700; border-radius: 12px; padding: 14px; text-align: center; min-height: 95px; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
                     <div style="color:#FFEB3B; font-size:11px; font-weight:800;">🧬 SAINS TAMBAHAN</div>
                     <div style="color:white; font-size:11px; font-weight:600; margin:3px 0;">4561/3</div>
-                    <div style="color:#FFD700; font-size:20px; font-weight:900;">18 Nov 2026</div>
+                    <div style="color:#FFD700; font-size:20px; font-weight:900;">19 Nov 2026</div>
                     <div style="color:#F3E5F5; font-size:10px; font-weight:600; margin-top:2px;">Hari Khamis</div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -405,52 +407,95 @@ with col_content:
     elif menu == "Selenggara Data":
         st.subheader("⚙️ Selenggara Data Amali Sains")
         
-        # --- EDITOR NOTIS MARQUEE ---
-        st.markdown("### 📢 Sistem Notis Marquee - Edit Teks Berjalan")
-        st.markdown(f"""
-        <div style="background:#FFEBEE; border:2.5px solid #D32F2F; border-radius:10px; padding:12px; margin-bottom:12px;">
-        <b style="color:#B71C1C;">📢 Notis Semasa (sedang berjalan):</b><br>
-        <span style="color:#D32F2F; font-weight:bold; font-size:13px;">{NOTIS_SEMASA}</span>
-        </div>
-        """, unsafe_allow_html=True)
+        # ===== LOGIN REQUIRED - Username: admin, Password: jpn =====
+        if not st.session_state["selenggara_auth"]:
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, #B71C1C 0%, #D32F2F 100%); border: 3px solid #FFD700; border-radius: 12px; padding: 16px; text-align:center; margin-bottom:15px;">
+                <div style="color:#FFD700; font-size:18px; font-weight:800;">🔒 KAWASAN TERHAD</div>
+                <div style="color:white; font-size:12px; margin-top:4px;">Sila log masuk untuk akses Selenggara Data<br>Hanya untuk Pentadbir JPN Selangor</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            with st.form("login_form"):
+                st.markdown("#### 🔑 Log Masuk Pentadbir")
+                user_input = st.text_input("👤 Nama Pengguna", placeholder="Masukkan nama pengguna")
+                pass_input = st.text_input("🔑 Kata Laluan", type="password", placeholder="Masukkan kata laluan")
+                col_l1, col_l2 = st.columns([1,1])
+                with col_l1:
+                    login_btn = st.form_submit_button("🔓 Log Masuk", use_container_width=True)
+                with col_l2:
+                    st.form_submit_button("❌ Batal", use_container_width=True)
+                
+                if login_btn:
+                    if user_input == "admin" and pass_input == "jpn":
+                        st.session_state["selenggara_auth"] = True
+                        st.success("✅ Log masuk berjaya! Selamat datang Admin.")
+                        st.rerun()
+                    else:
+                        st.error("❌ Nama pengguna atau kata laluan salah! Cuba lagi.")
+                        st.info("💡 Hint: admin / jpn")
+            
+            st.markdown("---")
+            st.info("📌 Hubungi Sektor Pentaksiran dan Peperiksaan JPN Selangor untuk akses.")
         
-        notis_baru = st.text_area("✏️ Edit Teks Notis Marquee:", value=NOTIS_SEMASA, height=120, key="edit_notis_marquee")
-        col_n1, col_n2, col_n3 = st.columns([1,1,1])
-        with col_n1:
-            if st.button("💾 Simpan Notis", use_container_width=True, key="btn_simpan_notis_final"):
-                if simpan_notis(notis_baru):
-                    st.success("✅ Notis berjaya disimpan! Marquee akan update.")
+        else:
+            # SUDAH LOGIN - Papar kandungan asal
+            c_logout1, c_logout2 = st.columns([4,1])
+            with c_logout1:
+                st.success("🔓 Anda log masuk sebagai **admin** - Akses Selenggara dibenarkan")
+            with c_logout2:
+                if st.button("🔒 Log Keluar", use_container_width=True):
+                    st.session_state["selenggara_auth"] = False
                     st.rerun()
-        with col_n2:
-            if st.button("🔄 Reset Default", use_container_width=True, key="btn_reset_notis_final"):
-                if simpan_notis(DEFAULT_NOTIS):
-                    st.success("✅ Notis reset ke default!")
-                    st.rerun()
-        with col_n3:
-            if st.button("👁️ Preview", use_container_width=True, key="btn_preview_notis"):
-                st.markdown(f"""
-                <div style="background:#B71C1C; border:2px solid gold; border-radius:8px; padding:8px; margin-top:8px;">
-                <marquee style="color:white; font-weight:bold;">{notis_baru}</marquee>
-                </div>
-                """, unsafe_allow_html=True)
-        
-        st.markdown("---")
-        st.info(f"Modul selenggara - File: {FILE_EXCEL.name if FILE_EXCEL else 'tiada'} | {len(df_ringkasan)} makmal")
-        uploaded = st.file_uploader("Upload Excel Amali Sains Baru", type=["xlsx","xls"])
-        if uploaded:
-            try:
-                xls = pd.ExcelFile(uploaded)
-                sheet = "Ringkasan_Makmal" if "Ringkasan_Makmal" in xls.sheet_names else xls.sheet_names[0]
-                df_new = pd.read_excel(uploaded, sheet_name=sheet)
-                st.success(f"Berjaya baca {len(df_new)} makmal")
-                st.dataframe(df_new.head())
-                if st.button(f"💾 Simpan ke {FILE_EXCEL.name}"):
-                    with pd.ExcelWriter(FILE_EXCEL, engine='openpyxl') as writer:
-                        df_new.to_excel(writer, sheet_name="Ringkasan_Makmal", index=False)
-                    st.success("Disimpan! Sila refresh page")
-                    st.cache_data.clear()
-            except Exception as e:
-                st.error(f"Error: {e}")
+            
+            st.markdown("---")
+            
+            # --- EDITOR NOTIS MARQUEE ---
+            st.markdown("### 📢 Sistem Notis Marquee - Edit Teks Berjalan")
+            st.markdown(f"""
+            <div style="background:#FFEBEE; border:2.5px solid #D32F2F; border-radius:10px; padding:12px; margin-bottom:12px;">
+            <b style="color:#B71C1C;">📢 Notis Semasa (sedang berjalan):</b><br>
+            <span style="color:#D32F2F; font-weight:bold; font-size:13px;">{NOTIS_SEMASA}</span>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            notis_baru = st.text_area("✏️ Edit Teks Notis Marquee:", value=NOTIS_SEMASA, height=120, key="edit_notis_marquee")
+            col_n1, col_n2, col_n3 = st.columns([1,1,1])
+            with col_n1:
+                if st.button("💾 Simpan Notis", use_container_width=True, key="btn_simpan_notis_final"):
+                    if simpan_notis(notis_baru):
+                        st.success("✅ Notis berjaya disimpan! Marquee akan update.")
+                        st.rerun()
+            with col_n2:
+                if st.button("🔄 Reset Default", use_container_width=True, key="btn_reset_notis_final"):
+                    if simpan_notis(DEFAULT_NOTIS):
+                        st.success("✅ Notis reset ke default!")
+                        st.rerun()
+            with col_n3:
+                if st.button("👁️ Preview", use_container_width=True, key="btn_preview_notis"):
+                    st.markdown(f"""
+                    <div style="background:#B71C1C; border:2px solid gold; border-radius:8px; padding:8px; margin-top:8px;">
+                    <marquee style="color:white; font-weight:bold;">{notis_baru}</marquee>
+                    </div>
+                    """, unsafe_allow_html=True)
+            
+            st.markdown("---")
+            st.info(f"Modul selenggara - File: {FILE_EXCEL.name if FILE_EXCEL else 'tiada'} | {len(df_ringkasan)} makmal")
+            uploaded = st.file_uploader("Upload Excel Amali Sains Baru", type=["xlsx","xls"])
+            if uploaded:
+                try:
+                    xls = pd.ExcelFile(uploaded)
+                    sheet = "Ringkasan_Makmal" if "Ringkasan_Makmal" in xls.sheet_names else xls.sheet_names[0]
+                    df_new = pd.read_excel(uploaded, sheet_name=sheet)
+                    st.success(f"Berjaya baca {len(df_new)} makmal")
+                    st.dataframe(df_new.head())
+                    if st.button(f"💾 Simpan ke {FILE_EXCEL.name}"):
+                        with pd.ExcelWriter(FILE_EXCEL, engine='openpyxl') as writer:
+                            df_new.to_excel(writer, sheet_name="Ringkasan_Makmal", index=False)
+                        st.success("Disimpan! Sila refresh page")
+                        st.cache_data.clear()
+                except Exception as e:
+                    st.error(f"Error: {e}")
 
 # FOOTER - ASAL
 st.markdown("---")
