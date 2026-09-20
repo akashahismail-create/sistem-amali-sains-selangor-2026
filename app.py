@@ -175,7 +175,7 @@ import glob
 
 def cari_file_excel():
     calon_nama = [
-        "data_pusat_amali_sains_baru.xlsx",
+        "data_pusat_amali_sains_BETUL.xlsx",
         "Data-Pusat-Amali-Sains-Baru-CLEANED.xlsx",
         "data_pusat_amali_sains_baru_CLEANED.xlsx",
         "DATA_MAKMAL_UJIAN_AMALI_SAINS_SELANGOR.xlsx",
@@ -499,8 +499,9 @@ with col_main:
                 df_new = pd.read_excel(uploaded, sheet_name="Ringkasan_Makmal")
                 st.success(f"Berjaya baca {len(df_new)} makmal")
                 st.dataframe(df_new.head())
-                if st.button("💾 Simpan ke data_pusat_amali_sains_baru.xlsx"):
-                    df_new.to_excel(FILE_EXCEL, sheet_name="Ringkasan_Makmal", index=False)
+                if st.button("💾 Simpan ke data_pusat_amali_sains_BETUL.xlsx"):
+                    with pd.ExcelWriter(FILE_EXCEL, engine='openpyxl') as writer:
+                        df_new.to_excel(writer, sheet_name="Ringkasan_Makmal", index=False)
                     st.success("Disimpan! Sila refresh page")
             except Exception as e:
                 st.error(f"Error: {e}")
