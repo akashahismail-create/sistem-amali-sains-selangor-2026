@@ -250,64 +250,44 @@ with col_content:
                 st.metric("Sains Tambahan", int(df_ringkasan["Sains_Tambahan_Sidang"].sum()))
             
             st.markdown("---")
-            st.markdown("### 📋 Jadual Amali SPM 2026 - Kotak Warna-Warni")
+            st.markdown("### 📋 Jadual Amali SPM 2026")
             
-            # Warna-warni macam kotak hijau atas tapi berlainan warna
-            j1,j2,j3 = st.columns(3)
+            # 4 sebaris sahaja - Fizik, Kimia, Biologi, Sains Tambahan - warna-warni
+            j1,j2,j3,j4 = st.columns(4)
             with j1:
                 st.markdown(f"""
-                <div style="background: linear-gradient(135deg, #1E88E5 0%, #1565C0 100%); border: 2.5px solid #FFD700; border-radius: 12px; padding: 12px; text-align: center; min-height: 85px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
-                    <div style="color:#FFEB3B; font-size:10px; font-weight:700;">🧪 FIZIK</div>
-                    <div style="color:white; font-size:11px; font-weight:600; margin:2px 0;">4531/3</div>
-                    <div style="color:#FFD700; font-size:20px; font-weight:800;">16 Nov 2026</div>
-                    <div style="color:#E3F2FD; font-size:9px;">Hari Isnin</div>
+                <div style="background: linear-gradient(135deg, #1E88E5 0%, #1565C0 100%); border: 2.5px solid #FFD700; border-radius: 12px; padding: 14px; text-align: center; min-height: 95px; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
+                    <div style="color:#FFEB3B; font-size:11px; font-weight:800; letter-spacing:0.5px;">🧪 FIZIK</div>
+                    <div style="color:white; font-size:11px; font-weight:600; margin:3px 0;">4531/3</div>
+                    <div style="color:#FFD700; font-size:20px; font-weight:900;">16 Nov 2026</div>
+                    <div style="color:#E3F2FD; font-size:10px; font-weight:600; margin-top:2px;">Hari Isnin</div>
                 </div>
                 """, unsafe_allow_html=True)
             with j2:
                 st.markdown(f"""
-                <div style="background: linear-gradient(135deg, #43A047 0%, #2E7D32 100%); border: 2.5px solid #FFD700; border-radius: 12px; padding: 12px; text-align: center; min-height: 85px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
-                    <div style="color:#FFEB3B; font-size:10px; font-weight:700;">⚗️ KIMIA</div>
-                    <div style="color:white; font-size:11px; font-weight:600; margin:2px 0;">4541/3</div>
-                    <div style="color:#FFD700; font-size:20px; font-weight:800;">17 Nov 2026</div>
-                    <div style="color:#E8F5E9; font-size:9px;">Hari Selasa</div>
+                <div style="background: linear-gradient(135deg, #43A047 0%, #2E7D32 100%); border: 2.5px solid #FFD700; border-radius: 12px; padding: 14px; text-align: center; min-height: 95px; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
+                    <div style="color:#FFEB3B; font-size:11px; font-weight:800;">⚗️ KIMIA</div>
+                    <div style="color:white; font-size:11px; font-weight:600; margin:3px 0;">4541/3</div>
+                    <div style="color:#FFD700; font-size:20px; font-weight:900;">17 Nov 2026</div>
+                    <div style="color:#E8F5E9; font-size:10px; font-weight:600; margin-top:2px;">Hari Selasa</div>
                 </div>
                 """, unsafe_allow_html=True)
             with j3:
                 st.markdown(f"""
-                <div style="background: linear-gradient(135deg, #FB8C00 0%, #EF6C00 100%); border: 2.5px solid #FFD700; border-radius: 12px; padding: 12px; text-align: center; min-height: 85px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
-                    <div style="color:#FFEB3B; font-size:10px; font-weight:700;">🔬 BIOLOGI</div>
-                    <div style="color:white; font-size:11px; font-weight:600; margin:2px 0;">4551/3</div>
-                    <div style="color:#FFD700; font-size:20px; font-weight:800;">18 Nov 2026</div>
-                    <div style="color:#FFF3E0; font-size:9px;">Hari Rabu</div>
+                <div style="background: linear-gradient(135deg, #FB8C00 0%, #EF6C00 100%); border: 2.5px solid #FFD700; border-radius: 12px; padding: 14px; text-align: center; min-height: 95px; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
+                    <div style="color:#FFEB3B; font-size:11px; font-weight:800;">🔬 BIOLOGI</div>
+                    <div style="color:white; font-size:11px; font-weight:600; margin:3px 0;">4551/3</div>
+                    <div style="color:#FFD700; font-size:20px; font-weight:900;">18 Nov 2026</div>
+                    <div style="color:#FFF3E0; font-size:10px; font-weight:600; margin-top:2px;">Hari Rabu</div>
                 </div>
                 """, unsafe_allow_html=True)
-            
-            j4,j5,j6 = st.columns(3)
             with j4:
                 st.markdown(f"""
-                <div style="background: linear-gradient(135deg, #8E24AA 0%, #6A1B9A 100%); border: 2.5px solid #FFD700; border-radius: 12px; padding: 12px; text-align: center; min-height: 85px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
-                    <div style="color:#FFEB3B; font-size:10px; font-weight:700;">🧬 SAINS TAMBAHAN</div>
-                    <div style="color:white; font-size:11px; font-weight:600; margin:2px 0;">4561/3</div>
-                    <div style="color:#FFD700; font-size:20px; font-weight:800;">19 Nov 2026</div>
-                    <div style="color:#F3E5F5; font-size:9px;">Hari Khamis</div>
-                </div>
-                """, unsafe_allow_html=True)
-            with j5:
-                st.markdown(f"""
-                <div style="background: linear-gradient(135deg, #E53935 0%, #B71C1C 100%); border: 2.5px solid #FFD700; border-radius: 12px; padding: 12px; text-align: center; min-height: 85px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); animation: blinkGold 1.5s infinite;">
-                    <div style="color:#FFEB3B; font-size:10px; font-weight:700;">⏳ COUNTDOWN</div>
-                    <div style="color:white; font-size:11px; font-weight:600; margin:2px 0;">Ke 16 Nov</div>
-                    <div style="color:#FFD700; font-size:20px; font-weight:800;">{countdown_num} hari lagi</div>
-                    <div style="color:#FFCDD2; font-size:9px;">SPM 2026</div>
-                </div>
-                """, unsafe_allow_html=True)
-            with j6:
-                st.markdown(f"""
-                <div style="background: linear-gradient(135deg, #00897B 0%, #00695C 100%); border: 2.5px solid #FFD700; border-radius: 12px; padding: 12px; text-align: center; min-height: 85px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
-                    <div style="color:#FFEB3B; font-size:10px; font-weight:700;">✅ STATUS</div>
-                    <div style="color:white; font-size:11px; font-weight:600; margin:2px 0;">Data LP Rasmi</div>
-                    <div style="color:#FFD700; font-size:13px; font-weight:800;">Dikemaskini</div>
-                    <div style="color:#E0F2F1; font-size:9px;">473 Makmal Sah</div>
+                <div style="background: linear-gradient(135deg, #8E24AA 0%, #6A1B9A 100%); border: 2.5px solid #FFD700; border-radius: 12px; padding: 14px; text-align: center; min-height: 95px; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
+                    <div style="color:#FFEB3B; font-size:11px; font-weight:800;">🧬 SAINS TAMBAHAN</div>
+                    <div style="color:white; font-size:11px; font-weight:600; margin:3px 0;">4561/3</div>
+                    <div style="color:#FFD700; font-size:20px; font-weight:900;">19 Nov 2026</div>
+                    <div style="color:#F3E5F5; font-size:10px; font-weight:600; margin-top:2px;">Hari Khamis</div>
                 </div>
                 """, unsafe_allow_html=True)
             
