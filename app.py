@@ -318,8 +318,8 @@ with col_content:
                 <div style="background: linear-gradient(135deg, #8E24AA 0%, #6A1B9A 100%); border: 2.5px solid #FFD700; border-radius: 12px 12px 0 0; padding: 14px; text-align: center; min-height: 95px; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
                     <div style="color:#FFEB3B; font-size:11px; font-weight:800;">🧬 SAINS TAMBAHAN</div>
                     <div style="color:white; font-size:11px; font-weight:600; margin:3px 0;">4561/3</div>
-                    <div style="color:#FFD700; font-size:20px; font-weight:900;">19 Nov 2026</div>
-                    <div style="color:#F3E5F5; font-size:10px; font-weight:600; margin-top:2px;">Hari Khamis</div>
+                    <div style="color:#FFD700; font-size:20px; font-weight:900;">18 Nov 2026</div>
+                    <div style="color:#F3E5F5; font-size:10px; font-weight:600; margin-top:2px;">Hari Rabu</div>
                 </div>
                 <div style="background:#F3E5F5; border:2px solid #6A1B9A; border-top:none; border-radius:0 0 12px 12px; padding:8px; text-align:center; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
                     <div style="color:#4A148C; font-size:9px; font-weight:700;">JUMLAH CALON ST</div>
