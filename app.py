@@ -386,23 +386,64 @@ with col_content:
 
     elif menu == "Senarai Sidang":
         st.subheader("📋 Senarai Sidang Detail")
-        st.markdown("**Peraturan: Fizik 4 sidang, Kimia 4 sidang, Biologi 4 sidang, Sains Tambahan maksimum 3 sidang sahaja**")
+        st.markdown("**Peraturan: Fizik 4 sidang, Kimia 4 sidang, Biologi 4 sidang, Sains Tambahan maksimum 3 sidang sahaja | Tapisan: Daerah + Subjek + Sidang**")
         # Guna detail penuh jika ada, fallback ke df_detail
         df_to_show = df_full if not df_full.empty else df_detail
         if not df_to_show.empty:
-            c1,c2 = st.columns(2)
-            with c1:
-                col_name = "Nama_Pusat" if "Nama_Pusat" in df_to_show.columns else "Nama_Sekolah"
-                sek = ["Semua"] + sorted(df_to_show[col_name].dropna().unique().tolist())[:200]
-                pilih_s = st.selectbox("Pilih Sekolah:", sek, key="sidang_sekolah")
-            with c2:
-                pilih_sub = st.selectbox("Pilih Subjek:", ["Semua","Fizik","Kimia","Biologi","Sains Tambahan","FIZIK","KIMIA","BIOLOGI","SAINS TAMBAHAN"], key="sidang_subjek")
+            # Sediakan Kod PPD & Daerah untuk tapisan
+            PPD_MAP = {"BA":"KLANG","BB":"KUALA LANGAT","BC":"KUALA SELANGOR","BD":"HULU LANGAT","BE":"HULU SELANGOR","BF":"SABAK BERNAM","BG":"GOMBAK","BH":"PETALING PERDANA","BJ":"SEPANG","BK":"PETALING UTAMA"}
             df_v = df_to_show.copy()
-            if pilih_s != "Semua": df_v = df_v[df_v[col_name] == pilih_s]
-            # Handle subjek case insensitive
-            if pilih_sub != "Semua": 
+            # Tambah Kod_PPD dari No_Pusat (2 huruf pertama)
+            if "No_Pusat" in df_v.columns:
+                df_v["Kod_PPD"] = df_v["No_Pusat"].astype(str).str[:2]
+                df_v["Daerah"] = df_v["Kod_PPD"].map(PPD_MAP)
+            
+            # 4 filter sebaris: Daerah, Subjek, Sidang No, Carian Sekolah
+            f1,f2,f3,f4 = st.columns([1,1,1,1.2])
+            with f1:
+                daerah_opts = ["Semua"] + sorted(df_v["Daerah"].dropna().unique().tolist()) if "Daerah" in df_v.columns else ["Semua"]
+                # Juga bagi Kod_PPD terus
+                kod_opts = ["Semua"] + sorted(df_v["Kod_PPD"].dropna().unique().tolist()) if "Kod_PPD" in df_v.columns else ["Semua"]
+                # Gabung paparan Daerah + Kod
+                pilih_daerah = st.selectbox("🗺️ Pilih Daerah:", daerah_opts, key="sidang_daerah")
+            with f2:
+                subj_opts = ["Semua","FIZIK","KIMIA","BIOLOGI","SAINS TAMBAHAN"]
+                pilih_sub = st.selectbox("📚 Pilih Subjek:", subj_opts, key="sidang_subjek2")
+            with f3:
+                sidang_opts = ["Semua"] + sorted(df_v["Sidang_No"].dropna().unique().tolist()) if "Sidang_No" in df_v.columns else ["Semua"]
+                pilih_sidang = st.selectbox("🔢 Pilih Sidang:", sidang_opts, key="sidang_no")
+            with f4:
+                carian_sidang = st.text_input("🔍 Cari Sekolah/No Pusat:", placeholder="Taip SMK / BA001", key="sidang_cari")
+            
+            # Apply filter
+            if pilih_daerah != "Semua" and "Daerah" in df_v.columns:
+                df_v = df_v[df_v["Daerah"] == pilih_daerah]
+            if pilih_sub != "Semua":
                 df_v = df_v[df_v["Subjek"].str.upper() == pilih_sub.upper()]
-            st.dataframe(df_v, use_container_width=True, hide_index=True, height=500)
+            if pilih_sidang != "Semua" and "Sidang_No" in df_v.columns:
+                df_v = df_v[df_v["Sidang_No"] == pilih_sidang]
+            if carian_sidang:
+                df_v = df_v[df_v.apply(lambda r: carian_sidang.lower() in str(r.values).lower(), axis=1)]
+            
+            # Ringkasan tapisan
+            st.markdown(f"<div style='background:#E0F2F1; border:1px solid #00897B; border-radius:8px; padding:8px; font-size:12px;'>📊 Hasil: <b>{len(df_v)}</b> rekod | Daerah: <b>{pilih_daerah}</b> | Subjek: <b>{pilih_sub}</b> | Sidang: <b>{pilih_sidang}</b> | Sekolah unik: <b>{df_v['Nama_Pusat'].nunique() if 'Nama_Pusat' in df_v.columns else df_v['Nama_Sekolah'].nunique() if 'Nama_Sekolah' in df_v.columns else 0}</b></div>", unsafe_allow_html=True)
+            st.write("")
+            
+            # Susun kolum untuk paparan kemas - nama sekolah ikut daerah/subjek/sidang
+            cols_order = []
+            for c in ["No_Pusat","Nama_Pusat","Nama_Sekolah","Daerah","Kod_PPD","Subjek","Sidang_No","Nama_Makmal","Bil_Calon"]:
+                if c in df_v.columns:
+                    cols_order.append(c)
+            df_display = df_v[cols_order] if cols_order else df_v
+            
+            st.dataframe(df_display, use_container_width=True, hide_index=True, height=500)
+            
+            # Senarai sekolah ikut tapisan (unik)
+            if len(df_v) > 0:
+                nama_col = "Nama_Pusat" if "Nama_Pusat" in df_v.columns else "Nama_Sekolah"
+                senarai_sekolah = df_v[[ "No_Pusat", nama_col, "Daerah"]].drop_duplicates().sort_values(nama_col) if "Daerah" in df_v.columns else df_v[[ "No_Pusat", nama_col]].drop_duplicates().sort_values(nama_col)
+                st.markdown("#### 🏫 Senarai Sekolah (Ikut Tapisan Daerah/Subjek/Sidang)")
+                st.dataframe(senarai_sekolah, use_container_width=True, hide_index=True)
         else:
             st.info("Data detail kosong")
 
