@@ -1,7 +1,10 @@
+
 import streamlit as st
 import os
 import pandas as pd
 from datetime import datetime, date, timedelta
+from pathlib import Path
+import json
 
 st.set_page_config(page_title="JPN Selangor - Amali Sains 2026", layout="wide", page_icon="🧪")
 
@@ -10,7 +13,24 @@ if "dark_mode" not in st.session_state:
 if "menu_amali" not in st.session_state:
     st.session_state["menu_amali"] = "Dashboard"
 
-# ===== CSS SPM STYLE - KIRI MENU HIJAU (KEKAL 100%) =====
+# ===== FIX PATH GITHUB - WAJIB SUPAYA DATA TAK KOSONG =====
+BASE_DIR = Path(__file__).parent
+FILE_EXCEL_CANDIDATES = [
+    BASE_DIR / "data_pusat_amali_sains_baru.xlsx",
+    BASE_DIR / "data_pusat_amali_sains_BETUL.xlsx",
+    BASE_DIR / "data_pusat_amali_sains_baru (1).xlsx",
+    Path("data_pusat_amali_sains_baru.xlsx"),
+]
+FILE_EXCEL = None
+for p in FILE_EXCEL_CANDIDATES:
+    if p.exists():
+        FILE_EXCEL = p
+        break
+if FILE_EXCEL is None:
+    FILE_EXCEL = BASE_DIR / "data_pusat_amali_sains_baru.xlsx"
+FILE_NOTIS = BASE_DIR / "pemberitahuan.json"
+
+# ===== CSS SPM STYLE - KIRI MENU HIJAU =====
 dark_bg = "#121212" if st.session_state["dark_mode"] else "#FAFAFA"
 
 hide_style = f"""
@@ -74,7 +94,7 @@ TARIKH_AMALI = date(2026, 11, 16)
 delta = (TARIKH_AMALI - HARI_INI).days
 countdown_num = str(max(delta, 0))
 
-# HERO - KEKAL
+# HERO
 st.markdown(f"""
 <div class="hero-banner">
     <div style="display:flex; align-items:center;">
@@ -83,7 +103,7 @@ st.markdown(f"""
             <div class="hero-title">JABATAN PENDIDIKAN SELANGOR</div>
             <div class="hero-subtitle">SEKTOR PENTAKSIRAN DAN PEPERIKSAAN</div>
             <div class="hero-spm">🧪 SIJIL PELAJARAN MALAYSIA 2026 🧪 | SISTEM PENGURUSAN UJIAN AMALI SAINS SELANGOR</div>
-            <div style="font-size:10px; color:#FFEB3B; margin-top:4px;">📅 Amali Sains: 16 November 2026 | Hari ini: {HARI_INI.strftime('%d %B %Y')} | {now_my.strftime('%I:%M %p')} MY | Data LP Rasmi</div>
+            <div style="font-size:10px; color:#FFEB3B; margin-top:4px;">📅 Amali Sains: 16 November 2026 | Hari ini: {HARI_INI.strftime('%d %B %Y')} | {now_my.strftime('%I:%M %p')} MY | Data LP Rasmi 473 Makmal</div>
         </div>
         <div style="margin-left:auto;">
             <div class="countdown-box" style="background: linear-gradient(135deg, #004D40, #00695C); border:3px solid gold; border-radius:12px; padding:8px 14px; text-align:center; min-width:120px;">
@@ -99,11 +119,9 @@ st.markdown(f"""
 # --- SISTEM NOTIS MARQUEE ---
 DEFAULT_NOTIS = "📢 MAKLUMAN TERKINI: DATA TELAH DIKEMASKINI IKUT LAPORAN RASMI LEMBAGA PEPERIKSAAN (CRViewer 60 & 61). 473 MAKMAL SAH, 287 PUSAT. KAPASITI 20 CALON PER SIDANG. SEBARANG PERTANYAAN SILA HUBUNGI SEKTOR PENTAKSIRAN DAN PEPERIKSAAN JPN SELANGOR"
 
-import json
-
 def baca_notis():
     try:
-        if os.path.exists(FILE_NOTIS):
+        if FILE_NOTIS.exists():
             with open(FILE_NOTIS, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 if isinstance(data, dict) and "notis" in data:
@@ -125,7 +143,7 @@ def simpan_notis(teks):
 
 NOTIS_SEMASA = baca_notis()
 
-# CSS Marquee - KEKAL
+# CSS Marquee - Pasti keluar
 st.markdown("""
 <style>
 .marquee-container {
@@ -158,108 +176,57 @@ st.markdown("""
 
 st.markdown(f'<div class="marquee-container"><div class="marquee-text">{NOTIS_SEMASA} &nbsp;&nbsp; | &nbsp;&nbsp; {NOTIS_SEMASA}</div></div>', unsafe_allow_html=True)
 
-# --- LOAD DATA - UPDATED UNTUK DATA BETUL ---
-from pathlib import Path
-BASE_DIR = Path(__file__).parent
-FILE_EXCEL_CANDIDATES = [
-    BASE_DIR / "data_pusat_amali_sains_baru.xlsx",
-    BASE_DIR / "data_pusat_amali_sains_BETUL.xlsx",
-    BASE_DIR / "data_pusat_amali_sains_baru (1).xlsx",
-    Path("data_pusat_amali_sains_baru.xlsx"),
-    Path("/mnt/data/data_pusat_amali_sains_BETUL.xlsx"),
-]
-FILE_EXCEL = None
-for p in FILE_EXCEL_CANDIDATES:
-    if p.exists():
-        FILE_EXCEL = p
-        break
-if FILE_EXCEL is None:
-    FILE_EXCEL = BASE_DIR / "data_pusat_amali_sains_baru.xlsx"
-FILE_NOTIS = BASE_DIR / "pemberitahuan.json"
-
+# --- LOAD DATA - FIX UNTUK GITHUB ---
 @st.cache_data
 def load_data():
     try:
-        if FILE_EXCEL and FILE_EXCEL.exists() if hasattr(FILE_EXCEL, "exists") else os.path.exists(FILE_EXCEL):
+        if FILE_EXCEL and FILE_EXCEL.exists():
             xls = pd.ExcelFile(FILE_EXCEL)
-            # Ringkasan
-            if "Ringkasan_Makmal" in xls.sheet_names:
-                df_r = pd.read_excel(xls, sheet_name="Ringkasan_Makmal")
-            else:
-                df_r = pd.DataFrame()
-            # Detail
-            if "Data_Pusat_Amali_Sains" in xls.sheet_names:
-                df_d = pd.read_excel(xls, sheet_name="Data_Pusat_Amali_Sains")
-            else:
-                df_d = pd.DataFrame()
-            # Detail penuh jika ada
-            if "Detail_Sidang_Penuh" in xls.sheet_names:
-                df_full = pd.read_excel(xls, sheet_name="Detail_Sidang_Penuh")
-            else:
-                df_full = pd.DataFrame()
-            return df_r, df_d, df_full
+            df_r = pd.read_excel(xls, sheet_name="Ringkasan_Makmal") if "Ringkasan_Makmal" in xls.sheet_names else pd.DataFrame()
+            df_d = pd.read_excel(xls, sheet_name="Data_Pusat_Amali_Sains") if "Data_Pusat_Amali_Sains" in xls.sheet_names else pd.DataFrame()
+            df_full = pd.read_excel(xls, sheet_name="Detail_Sidang_Penuh") if "Detail_Sidang_Penuh" in xls.sheet_names else pd.DataFrame()
+            return df_r, df_d, df_full, None
         else:
-            return pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
+            return pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), f"File tidak wujud: {FILE_EXCEL}"
     except Exception as e:
-        st.error(f"Gagal load Excel: {e}")
-        return pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
+        return pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), f"Error baca Excel {FILE_EXCEL}: {e}"
 
-df_ringkasan, df_detail, df_full = load_data()
+df_ringkasan, df_detail, df_full, err = load_data()
 
-# Pastikan kolum wujud untuk compatibility
-if not df_ringkasan.empty:
-    for c in ["Kod_PPD","No_Pusat","Nama_Sekolah","Nama_Makmal","Fizik_Sidang","Kimia_Sidang","Biologi_Sidang","Sains_Tambahan_Sidang","Jumlah_Calon","Kapasiti_Makmal","Daerah_Asal"]:
-        if c not in df_ringkasan.columns:
-            df_ringkasan[c] = 0
+# DEBUG INFO UNTUK GITHUB - JIKA ERROR TAMPIL
+if err:
+    st.error(err)
 
-# MAP PPD untuk paparan
-PPD_NAMA = {
-    "BA":"KLANG","BB":"KUALA LANGAT","BC":"KUALA SELANGOR","BD":"HULU LANGAT",
-    "BE":"HULU SELANGOR","BF":"SABAK BERNAM","BG":"GOMBAK","BH":"PETALING PERDANA",
-    "BJ":"SEPANG","BK":"PETALING UTAMA"
-}
-
-# ===== LAYOUT KIRI MENU + KANAN CONTENT - KEKAL =====
+# ===== LAYOUT KIRI MENU + KANAN CONTENT - ASAL =====
 col_menu, col_content = st.columns([1, 4])
 
 with col_menu:
     st.markdown("<div style='color:#FFD700; font-weight:800; font-size:14px; text-align:center; margin-bottom:10px;'>🧭 MENU AMALI</div>", unsafe_allow_html=True)
     
-    menu_items = [
-        "Dashboard",
-        "Ringkasan Pusat",
-        "Senarai Makmal Full",
-        "Senarai Sidang",
-        "Analisis",
-        "Cari Sekolah",
-        "Selenggara Data"
-    ]
-    
-    for m in menu_items:
-        is_active = st.session_state["menu_amali"] == m
-        # Guna button biasa tapi style hijau kuning kekal dari CSS
+    for m in ["Dashboard","Ringkasan Pusat","Senarai Makmal Full","Senarai Sidang","Analisis","Cari Sekolah","Selenggara Data"]:
         if st.button(m, key=f"menu_{m}", use_container_width=True):
             st.session_state["menu_amali"] = m
             st.rerun()
     
     st.markdown("---")
-    st.markdown(f"<div style='background:#004D40; border:1px solid gold; border-radius:8px; padding:8px; font-size:10px; color:#FFEB3B; text-align:center;'>📊 {len(df_ringkasan)} Makmal<br>🏫 {df_ringkasan['No_Pusat'].nunique() if not df_ringkasan.empty else 0} Pusat<br>✅ Data LP Rasmi</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='background:#004D40; border:1px solid gold; border-radius:8px; padding:8px; font-size:10px; color:#FFEB3B; text-align:center;'>📊 {len(df_ringkasan)} Makmal<br>🏫 {df_ringkasan['No_Pusat'].nunique() if not df_ringkasan.empty else 0} Pusat<br>📂 {FILE_EXCEL.name if FILE_EXCEL else 'Tiada'}</div>", unsafe_allow_html=True)
 
 menu = st.session_state["menu_amali"]
 
 with col_content:
 
-    # ===== DASHBOARD =====
+    # ===== DASHBOARD - KEKAL 100% MACAM KOD ASAL KAU =====
     if menu == "Dashboard":
-        st.subheader("📊 Dashboard Amali Sains 2026 - Data Rasmi LP")
+        st.subheader("📊 Dashboard Amali Sains 2026")
         
         if not df_ringkasan.empty:
             total_makmal = len(df_ringkasan)
             total_pusat = df_ringkasan["No_Pusat"].nunique()
             total_sekolah = df_ringkasan["Nama_Sekolah"].nunique()
             total_calon = df_ringkasan["Jumlah_Calon"].sum()
+            total_sidang = df_ringkasan["Fizik_Sidang"].sum() + df_ringkasan["Kimia_Sidang"].sum() + df_ringkasan["Biologi_Sidang"].sum() + df_ringkasan["Sains_Tambahan_Sidang"].sum()
             
-            # KPI ROW - KEKAL STYLE
+            # KPI CARDS - STYLE ASAL
             k1,k2,k3,k4 = st.columns(4)
             with k1:
                 st.markdown(f"<div class='kpi-card'><div class='kpi-label'>Jumlah Makmal</div><div class='kpi-value'>{total_makmal}</div><div style='color:white; font-size:9px;'>473 sah LP</div></div>", unsafe_allow_html=True)
@@ -268,12 +235,10 @@ with col_content:
             with k3:
                 st.markdown(f"<div class='kpi-card'><div class='kpi-label'>Jumlah Calon</div><div class='kpi-value'>{total_calon}</div><div style='color:white; font-size:9px;'>Merentas sidang</div></div>", unsafe_allow_html=True)
             with k4:
-                total_sidang = df_ringkasan["Fizik_Sidang"].sum() + df_ringkasan["Kimia_Sidang"].sum() + df_ringkasan["Biologi_Sidang"].sum() + df_ringkasan["Sains_Tambahan_Sidang"].sum()
                 st.markdown(f"<div class='kpi-card'><div class='kpi-label'>Jumlah Sidang</div><div class='kpi-value'>{total_sidang}</div><div style='color:white; font-size:9px;'>F+K+B+ST</div></div>", unsafe_allow_html=True)
             
             st.write("")
             
-            # Baris kedua KPI subjek
             c1,c2,c3,c4 = st.columns(4)
             with c1:
                 st.metric("Fizik Sidang", int(df_ringkasan["Fizik_Sidang"].sum()))
@@ -285,39 +250,52 @@ with col_content:
                 st.metric("Sains Tambahan", int(df_ringkasan["Sains_Tambahan_Sidang"].sum()))
             
             st.markdown("---")
+            st.markdown("### 📋 Maklumat Asas")
+            col_a, col_b = st.columns(2)
+            with col_a:
+                st.markdown(f"""
+                <div style="background:#E0F2F1; border:2px solid #00897B; border-radius:10px; padding:12px;">
+                <b style="color:#004D40;">📊 Statistik Asas (Data LP Rasmi)</b><br>
+                <span style="font-size:12px;">
+                • Jumlah Pusat: <b>{total_pusat}</b><br>
+                • Jumlah Sekolah: <b>{total_sekolah}</b><br>
+                • Jumlah Makmal: <b>{total_makmal}</b><br>
+                • Purata Makmal/Pusat: <b>{total_makmal/total_pusat:.2f}</b><br>
+                • Kapasiti Majoriti: <b>20 calon/sidang</b><br>
+                • Jumlah Calon (semua sidang): <b>{total_calon}</b>
+                </span>
+                </div>
+                """, unsafe_allow_html=True)
+            with col_b:
+                st.markdown(f"""
+                <div style="background:#FFF8E1; border:2px solid #FFD700; border-radius:10px; padding:12px;">
+                <b style="color:#F57F17;">🗓️ Jadual Amali SPM 2026</b><br>
+                <span style="font-size:12px;">
+                • Fizik (4531/3): <b>16 Nov 2026</b><br>
+                • Kimia (4541/3): <b>17 Nov 2026</b><br>
+                • Biologi (4551/3): <b>18 Nov 2026</b><br>
+                • Sains Tambahan (4561/3): <b>19 Nov 2026</b><br>
+                • Countdown: <b>{countdown_num} hari lagi</b><br>
+                • Status: <b style="color:green;">Data LP Rasmi Dikemaskini</b>
+                </span>
+                </div>
+                """, unsafe_allow_html=True)
             
-            # PPD breakdown - BARU TAPI STYLE SAMA
-            st.markdown("### 🗺️ Pecahan Ikut PPD (Kod Pusat)")
+            st.write("")
+            # PPD breakdown
             if "Kod_PPD" in df_ringkasan.columns:
-                ppd_count = df_ringkasan.groupby("Kod_PPD").agg(
-                    Bil_Makmal=("Nama_Makmal","count"),
-                    Bil_Pusat=("No_Pusat","nunique"),
-                    Fizik=("Fizik_Sidang","sum"),
-                    Kimia=("Kimia_Sidang","sum"),
-                    Biologi=("Biologi_Sidang","sum"),
-                    ST=("Sains_Tambahan_Sidang","sum")
-                ).reset_index()
-                ppd_count["Daerah"] = ppd_count["Kod_PPD"].map(PPD_NAMA)
+                st.markdown("### 🗺️ Pecahan Ikut PPD")
+                ppd_map = {"BA":"KLANG","BB":"KUALA LANGAT","BC":"KUALA SELANGOR","BD":"HULU LANGAT","BE":"HULU SELANGOR","BF":"SABAK BERNAM","BG":"GOMBAK","BH":"PETALING PERDANA","BJ":"SEPANG","BK":"PETALING UTAMA"}
+                ppd_count = df_ringkasan.groupby("Kod_PPD").agg(Bil_Makmal=("Nama_Makmal","count"), Bil_Pusat=("No_Pusat","nunique"), Fizik=("Fizik_Sidang","sum"), Kimia=("Kimia_Sidang","sum"), Biologi=("Biologi_Sidang","sum"), ST=("Sains_Tambahan_Sidang","sum")).reset_index()
+                ppd_count["Daerah"] = ppd_count["Kod_PPD"].map(ppd_map)
                 st.dataframe(ppd_count, use_container_width=True, hide_index=True)
-            
-            # Warning ST >3 - BARU
-            st.markdown("### ⚠️ Semakan Peraturan Sains Tambahan (Max 3 Sidang)")
-            s_tambahan_pusat = df_ringkasan.groupby(["No_Pusat","Nama_Sekolah"])["Sains_Tambahan_Sidang"].sum().reset_index()
-            lebih = s_tambahan_pusat[s_tambahan_pusat["Sains_Tambahan_Sidang"] > 3]
-            if not lebih.empty:
-                st.error(f"🚨 {len(lebih)} pusat melebihi 3 sidang ST (Data LP asal memang begitu - perlu pengesahan):")
-                st.dataframe(lebih, use_container_width=True, hide_index=True)
-            else:
-                st.success("✅ Semua pusat patuh max 3 sidang Sains Tambahan")
-                
         else:
-            st.warning("Data kosong - sila upload Excel")
+            st.warning("Data kosong - pastikan file Excel ada dalam repo GitHub")
 
     elif menu == "Ringkasan Pusat":
-        st.subheader("🏫 Ringkasan Pusat Amali (Data LP Rasmi)")
+        st.subheader("🏫 Ringkasan Pusat Amali")
         
         if not df_ringkasan.empty:
-            # FILTER BARU: Kod PPD + Daerah + Subjek tapi UI kekal hijau kuning
             f1,f2,f3 = st.columns(3)
             with f1:
                 kod_list = ["Semua"] + sorted(df_ringkasan["Kod_PPD"].dropna().unique().tolist())
@@ -341,122 +319,70 @@ with col_content:
             total_pusat = df_tapis["No_Pusat"].nunique()
             total_sidang = df_tapis["Fizik_Sidang"].sum() + df_tapis["Kimia_Sidang"].sum() + df_tapis["Biologi_Sidang"].sum() + df_tapis["Sains_Tambahan_Sidang"].sum()
 
-            st.markdown(f"<div style='background:#E0F2F1; border:1px solid #00897B; border-radius:8px; padding:8px; font-size:12px;'><b>📊 Analisis Pantas:</b> Nisbah Sidang : Makmal = {total_sidang/total_makmal:.1f} sidang/makmal | Jumlah Makmal: {total_makmal} | Pusat: {total_pusat} | Kapasiti 20 majoriti</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='background:#E0F2F1; border:1px solid #00897B; border-radius:8px; padding:8px; font-size:12px;'><b>📊 Analisis Pantas:</b> Nisbah Sidang : Makmal = {total_sidang/total_makmal:.1f} sidang/makmal | Jumlah Makmal: {total_makmal} | Pusat: {total_pusat}</div>", unsafe_allow_html=True)
             st.write("")
-            # Highlight ST >3 dalam table view
-            def highlight_st(row):
-                if row["Sains_Tambahan_Sidang"] > 3:
-                    return ['background-color: #FFCDD2']*len(row)
-                return ['']*len(row)
-            
-            st.dataframe(df_tapis.style.apply(highlight_st, axis=1), use_container_width=True, hide_index=True, height=500)
-        else:
-            st.info("Data kosong")
+            st.dataframe(df_tapis, use_container_width=True, hide_index=True, height=400)
 
     elif menu == "Senarai Makmal Full":
-        st.subheader("🏫 Senarai Pusat & Makmal - Data Rasmi LP")
-        st.markdown(f"*Total {len(df_ringkasan)} makmal sah LP | Kapasiti majoriti 20 calon/sidang | Ada MAKMAL SAINS TAMBAHAN 1 & 2 yang sah*")
+        st.subheader("🏫 Senarai Pusat & Makmal (3 Makmal per Sekolah)")
+        st.markdown("*Setiap sekolah: Makmal 1, Makmal 2, Makmal 3 | Setiap makmal: Fizik 4, Kimia 4, Biologi 4 sidang | Sains Tambahan max 3 sidang per sekolah*")
         if not df_ringkasan.empty:
-            c1,c2 = st.columns(2)
-            with c1:
-                ppd_filter = ["Semua"] + sorted(df_ringkasan["Kod_PPD"].unique().tolist())
-                pilih_ppd_full = st.selectbox("Filter PPD:", ppd_filter, key="full_ppd")
-            with c2:
-                st.markdown(f"**Jumlah:** {len(df_ringkasan)} makmal")
-            df_show = df_ringkasan.copy()
-            if pilih_ppd_full != "Semua":
-                df_show = df_show[df_show["Kod_PPD"] == pilih_ppd_full]
-            st.dataframe(df_show, use_container_width=True, hide_index=True, height=600)
+            st.dataframe(df_ringkasan, use_container_width=True, hide_index=True)
 
     elif menu == "Senarai Sidang":
-        st.subheader("📋 Senarai Sidang Detail (Ikut Jadual LP)")
-        st.markdown("**Data sebenar dari CRViewer 61: Bil calon per sidang ikut makmal**")
-        if not df_full.empty:
-            c1,c2,c3 = st.columns(3)
+        st.subheader("📋 Senarai Sidang Detail")
+        st.markdown("**Peraturan: Fizik 4 sidang, Kimia 4 sidang, Biologi 4 sidang, Sains Tambahan maksimum 3 sidang sahaja**")
+        # Guna detail penuh jika ada, fallback ke df_detail
+        df_to_show = df_full if not df_full.empty else df_detail
+        if not df_to_show.empty:
+            c1,c2 = st.columns(2)
             with c1:
-                sek = ["Semua"] + sorted(df_full["Nama_Pusat"].dropna().unique().tolist())[:100]
-                pilih_s = st.selectbox("Pilih Pusat (100 pertama):", sek, key="sidang_sekolah")
+                col_name = "Nama_Pusat" if "Nama_Pusat" in df_to_show.columns else "Nama_Sekolah"
+                sek = ["Semua"] + sorted(df_to_show[col_name].dropna().unique().tolist())[:200]
+                pilih_s = st.selectbox("Pilih Sekolah:", sek, key="sidang_sekolah")
             with c2:
-                pilih_sub = st.selectbox("Pilih Subjek:", ["Semua","FIZIK","KIMIA","BIOLOGI","SAINS TAMBAHAN"], key="sidang_subjek")
-            with c3:
-                if "Nama_Makmal" in df_full.columns:
-                    mk = ["Semua"] + sorted(df_full["Nama_Makmal"].dropna().unique().tolist())
-                    pilih_mk = st.selectbox("Pilih Makmal:", mk, key="sidang_makmal")
-                else:
-                    pilih_mk = "Semua"
-            
-            df_v = df_full.copy()
-            if pilih_s != "Semua": df_v = df_v[df_v["Nama_Pusat"] == pilih_s]
-            if pilih_sub != "Semua": df_v = df_v[df_v["Subjek"] == pilih_sub]
-            if pilih_mk != "Semua": df_v = df_v[df_v["Nama_Makmal"] == pilih_mk]
+                pilih_sub = st.selectbox("Pilih Subjek:", ["Semua","Fizik","Kimia","Biologi","Sains Tambahan","FIZIK","KIMIA","BIOLOGI","SAINS TAMBAHAN"], key="sidang_subjek")
+            df_v = df_to_show.copy()
+            if pilih_s != "Semua": df_v = df_v[df_v[col_name] == pilih_s]
+            # Handle subjek case insensitive
+            if pilih_sub != "Semua": 
+                df_v = df_v[df_v["Subjek"].str.upper() == pilih_sub.upper()]
             st.dataframe(df_v, use_container_width=True, hide_index=True, height=500)
-            st.info(f"Total {len(df_v)} rekod sidang detail")
         else:
-            # Fallback ke df_detail lama
-            if not df_detail.empty:
-                c1,c2 = st.columns(2)
-                with c1:
-                    sek = ["Semua"] + sorted(df_detail["Nama_Sekolah"].dropna().unique().tolist())
-                    pilih_s = st.selectbox("Pilih Sekolah:", sek, key="sidang_sekolah2")
-                with c2:
-                    pilih_sub = st.selectbox("Pilih Subjek:", ["Semua","Fizik","Kimia","Biologi","Sains Tambahan"], key="sidang_subjek2")
-                df_v = df_detail.copy()
-                if pilih_s != "Semua": df_v = df_v[df_v["Nama_Sekolah"] == pilih_s]
-                if pilih_sub != "Semua": df_v = df_v[df_v["Subjek"] == pilih_sub]
-                st.dataframe(df_v, use_container_width=True, hide_index=True)
-            else:
-                st.info("Data detail kosong")
+            st.info("Data detail kosong")
 
     elif menu == "Analisis":
-        st.subheader("📊 Analisis Amali Sains - Data LP Rasmi")
+        st.subheader("📊 Analisis Amali Sains")
         if not df_ringkasan.empty:
             col_a, col_b = st.columns(2)
             with col_a:
                 st.metric("Total Sekolah", df_ringkasan["Nama_Sekolah"].nunique())
-                st.metric("Total Pusat", df_ringkasan["No_Pusat"].nunique())
                 st.metric("Total Makmal", len(df_ringkasan))
-                st.metric("Avg Makmal/Pusat", f"{len(df_ringkasan)/df_ringkasan['No_Pusat'].nunique():.2f}")
-                st.markdown("---")
-                st.write("**Kapasiti Makmal (LP):**")
+                st.metric("Avg Makmal/Sekolah", f"{len(df_ringkasan)/df_ringkasan['Nama_Sekolah'].nunique():.1f} (target 3.0)")
+                st.write("**Kapasiti Makmal:**")
                 st.dataframe(df_ringkasan["Kapasiti_Makmal"].value_counts().reset_index(), use_container_width=True, hide_index=True)
             with col_b:
                 try:
-                    s_tambahan = df_ringkasan.groupby(["No_Pusat","Nama_Sekolah"])["Sains_Tambahan_Sidang"].sum().reset_index()
-                    s_tambahan = s_tambahan.set_index("No_Pusat")
-                    st.write("**Sains Tambahan per Pusat (max 3 - peraturan):**")
-                    st.dataframe(s_tambahan, height=300)
-                    lebih = s_tambahan[s_tambahan["Sains_Tambahan_Sidang"] > 3]
+                    s_tambahan = df_ringkasan.groupby("Nama_Sekolah")["Sains_Tambahan_Sidang"].apply(lambda x: pd.to_numeric(x, errors='coerce').sum())
+                    st.write("**Sains Tambahan per Sekolah (max 3):**")
+                    st.dataframe(s_tambahan)
+                    lebih = s_tambahan[s_tambahan > 3]
                     if not lebih.empty:
-                        st.error(f"⚠️ {len(lebih)} pusat lebih 3 sidang ST (data LP asal):")
+                        st.error(f"⚠️ {len(lebih)} sekolah lebih 3 sidang Sains Tambahan!")
                         st.dataframe(lebih)
-                        st.markdown("<div style='background:#FFF3E0; border:1px solid #FF9800; padding:8px; border-radius:8px; font-size:11px;'>Nota: 5 pusat ni memang dalam CRViewer asal ada 4-6 sidang ST. Perlu semak dengan LP sama ada kekal atau pecah pusat.</div>", unsafe_allow_html=True)
                     else:
-                        st.success("✅ Semua pusat patuh max 3 sidang Sains Tambahan")
-                    
-                    st.markdown("---")
-                    st.write("**Jumlah Sidang Ikut PPD:**")
-                    ppd_sidang = df_ringkasan.groupby("Kod_PPD")[["Fizik_Sidang","Kimia_Sidang","Biologi_Sidang","Sains_Tambahan_Sidang"]].sum()
-                    st.dataframe(ppd_sidang, use_container_width=True)
+                        st.success("✅ Semua sekolah patuh max 3 sidang Sains Tambahan")
                 except Exception as e:
                     st.error(str(e))
 
     elif menu == "Cari Sekolah":
-        st.subheader("🔍 Cari Sekolah / Pusat Amali")
-        carian = st.text_input("Taip nama sekolah / No Pusat / Kod PPD / Kod Sekolah:", placeholder="Contoh: BA001 atau SMK Seksyen 24 atau BD atau BEA0091")
+        st.subheader("🔍 Cari Sekolah Amali")
+        carian = st.text_input("Taip nama sekolah / No Pusat / Kod PPD:", placeholder="Contoh: SMK Seksyen 24(2) atau BD atau 1")
         if carian and not df_ringkasan.empty:
             df_cari = df_ringkasan[df_ringkasan.apply(lambda row: carian.lower() in str(row.values).lower(), axis=1)]
             st.dataframe(df_cari, use_container_width=True, hide_index=True)
             if not df_cari.empty:
-                pusat = df_cari.iloc[0]['No_Pusat']
-                sekolah = df_cari.iloc[0]['Nama_Sekolah']
-                bil = len(df_cari)
-                st.success(f"Ditemui: {sekolah} ({pusat}) - {bil} makmal")
-                # Tunjuk detail sidang untuk pusat ni jika ada
-                if not df_full.empty:
-                    df_pusat_sidang = df_full[df_full["No_Pusat"] == pusat]
-                    if not df_pusat_sidang.empty:
-                        st.write(f"**Detail Sidang {pusat}:**")
-                        st.dataframe(df_pusat_sidang, use_container_width=True, hide_index=True)
+                st.success(f"Ditemui: {df_cari.iloc[0]['Nama_Sekolah']} - {len(df_cari)} makmal (Makmal 1,2,3)")
 
     elif menu == "Selenggara Data":
         st.subheader("⚙️ Selenggara Data Amali Sains")
@@ -491,17 +417,16 @@ with col_content:
                 """, unsafe_allow_html=True)
         
         st.markdown("---")
-        st.info("Modul selenggara - Data LP Rasmi 473 makmal. Upload Excel baru jika ada kemaskini LP terbaru.")
-        uploaded = st.file_uploader("Upload Excel Amali Sains Baru (CRViewer LP)", type=["xlsx","xls"])
+        st.info(f"Modul selenggara - File: {FILE_EXCEL.name if FILE_EXCEL else 'tiada'} | {len(df_ringkasan)} makmal")
+        uploaded = st.file_uploader("Upload Excel Amali Sains Baru", type=["xlsx","xls"])
         if uploaded:
             try:
-                # Support both xls and xlsx
                 xls = pd.ExcelFile(uploaded)
-                sheet_to_read = "Ringkasan_Makmal" if "Ringkasan_Makmal" in xls.sheet_names else xls.sheet_names[0]
-                df_new = pd.read_excel(uploaded, sheet_name=sheet_to_read)
-                st.success(f"Berjaya baca {len(df_new)} baris dari sheet {sheet_to_read}")
+                sheet = "Ringkasan_Makmal" if "Ringkasan_Makmal" in xls.sheet_names else xls.sheet_names[0]
+                df_new = pd.read_excel(uploaded, sheet_name=sheet)
+                st.success(f"Berjaya baca {len(df_new)} makmal")
                 st.dataframe(df_new.head())
-                if st.button("💾 Simpan ke data_pusat_amali_sains_baru.xlsx"):
+                if st.button(f"💾 Simpan ke {FILE_EXCEL.name}"):
                     with pd.ExcelWriter(FILE_EXCEL, engine='openpyxl') as writer:
                         df_new.to_excel(writer, sheet_name="Ringkasan_Makmal", index=False)
                     st.success("Disimpan! Sila refresh page")
@@ -509,6 +434,6 @@ with col_content:
             except Exception as e:
                 st.error(f"Error: {e}")
 
-# FOOTER - KEKAL
+# FOOTER - ASAL
 st.markdown("---")
-st.markdown('<div style="background: linear-gradient(135deg, #004D40 0%, #00695C 100%); border: 2px solid gold; border-radius: 12px; padding: 10px; text-align:center;"><div style="color:gold; font-weight:800; font-size:12px;">© 2026 JPN SELANGOR | SEKTOR PENTAKSIRAN DAN PEPERIKSAAN | UJIAN AMALI SAINS 2026 | DATA LP RASMI 473 MAKMAL</div><div style="color:white; font-size:11px; margin-top:4px;">Fizik 1277 | Kimia 1279 | Biologi 1042 | Sains Tambahan 68 sidang | Kapasiti 20 majoriti | Dashboard 2 Bahagian Kiri Menu Kekal</div></div>', unsafe_allow_html=True)
+st.markdown('<div style="background: linear-gradient(135deg, #004D40 0%, #00695C 100%); border: 2px solid gold; border-radius: 12px; padding: 10px; text-align:center;"><div style="color:gold; font-weight:800; font-size:12px;">© 2026 JPN SELANGOR | SEKTOR PENTAKSIRAN DAN PEPERIKSAAN | UJIAN AMALI SAINS 2026</div><div style="color:white; font-size:11px; margin-top:4px;">3 Makmal per Sekolah (Makmal 1,2,3) | Fizik 4 | Kimia 4 | Biologi 4 | Sains Tambahan max 3 | Dashboard 2 Bahagian Kiri Menu | Data LP Rasmi 473 Makmal</div></div>', unsafe_allow_html=True)
