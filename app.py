@@ -254,42 +254,77 @@ with col_content:
             st.markdown("---")
             st.markdown("### 📋 Jadual Amali SPM 2026")
             
-            # 4 sebaris sahaja - Fizik, Kimia, Biologi, Sains Tambahan - warna-warni
+            # Kira jumlah calon ikut mata pelajaran dari data LP
+            try:
+                if not df_full.empty:
+                    calon_fizik = int(df_full[df_full["Subjek"]=="FIZIK"]["Bil_Calon"].sum())
+                    calon_kimia = int(df_full[df_full["Subjek"]=="KIMIA"]["Bil_Calon"].sum())
+                    calon_bio = int(df_full[df_full["Subjek"]=="BIOLOGI"]["Bil_Calon"].sum())
+                    calon_st = int(df_full[df_full["Subjek"]=="SAINS TAMBAHAN"]["Bil_Calon"].sum())
+                else:
+                    calon_fizik = calon_kimia = calon_bio = calon_st = 0
+            except:
+                calon_fizik = int(df_ringkasan["Fizik_Sidang"].sum() * 15) if not df_ringkasan.empty else 0
+                calon_kimia = int(df_ringkasan["Kimia_Sidang"].sum() * 15) if not df_ringkasan.empty else 0
+                calon_bio = int(df_ringkasan["Biologi_Sidang"].sum() * 15) if not df_ringkasan.empty else 0
+                calon_st = int(df_ringkasan["Sains_Tambahan_Sidang"].sum() * 15) if not df_ringkasan.empty else 0
+            
+            # 4 sebaris sahaja - Fizik, Kimia, Biologi, Sains Tambahan - warna-warni + jumlah calon bawah
             j1,j2,j3,j4 = st.columns(4)
             with j1:
                 st.markdown(f"""
-                <div style="background: linear-gradient(135deg, #1E88E5 0%, #1565C0 100%); border: 2.5px solid #FFD700; border-radius: 12px; padding: 14px; text-align: center; min-height: 95px; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
+                <div style="background: linear-gradient(135deg, #1E88E5 0%, #1565C0 100%); border: 2.5px solid #FFD700; border-radius: 12px 12px 0 0; padding: 14px; text-align: center; min-height: 95px; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
                     <div style="color:#FFEB3B; font-size:11px; font-weight:800; letter-spacing:0.5px;">🧪 FIZIK</div>
                     <div style="color:white; font-size:11px; font-weight:600; margin:3px 0;">4531/3</div>
                     <div style="color:#FFD700; font-size:20px; font-weight:900;">16 Nov 2026</div>
                     <div style="color:#E3F2FD; font-size:10px; font-weight:600; margin-top:2px;">Hari Isnin</div>
                 </div>
+                <div style="background:#E3F2FD; border:2px solid #1565C0; border-top:none; border-radius:0 0 12px 12px; padding:8px; text-align:center; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
+                    <div style="color:#0D47A1; font-size:9px; font-weight:700;">JUMLAH CALON FIZIK</div>
+                    <div style="color:#1565C0; font-size:18px; font-weight:900;">{calon_fizik:,}</div>
+                    <div style="color:#546E7A; font-size:8px;">orang</div>
+                </div>
                 """, unsafe_allow_html=True)
             with j2:
                 st.markdown(f"""
-                <div style="background: linear-gradient(135deg, #43A047 0%, #2E7D32 100%); border: 2.5px solid #FFD700; border-radius: 12px; padding: 14px; text-align: center; min-height: 95px; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
+                <div style="background: linear-gradient(135deg, #43A047 0%, #2E7D32 100%); border: 2.5px solid #FFD700; border-radius: 12px 12px 0 0; padding: 14px; text-align: center; min-height: 95px; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
                     <div style="color:#FFEB3B; font-size:11px; font-weight:800;">⚗️ KIMIA</div>
                     <div style="color:white; font-size:11px; font-weight:600; margin:3px 0;">4541/3</div>
                     <div style="color:#FFD700; font-size:20px; font-weight:900;">17 Nov 2026</div>
                     <div style="color:#E8F5E9; font-size:10px; font-weight:600; margin-top:2px;">Hari Selasa</div>
                 </div>
+                <div style="background:#E8F5E9; border:2px solid #2E7D32; border-top:none; border-radius:0 0 12px 12px; padding:8px; text-align:center; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
+                    <div style="color:#1B5E20; font-size:9px; font-weight:700;">JUMLAH CALON KIMIA</div>
+                    <div style="color:#2E7D32; font-size:18px; font-weight:900;">{calon_kimia:,}</div>
+                    <div style="color:#546E7A; font-size:8px;">orang</div>
+                </div>
                 """, unsafe_allow_html=True)
             with j3:
                 st.markdown(f"""
-                <div style="background: linear-gradient(135deg, #FB8C00 0%, #EF6C00 100%); border: 2.5px solid #FFD700; border-radius: 12px; padding: 14px; text-align: center; min-height: 95px; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
+                <div style="background: linear-gradient(135deg, #FB8C00 0%, #EF6C00 100%); border: 2.5px solid #FFD700; border-radius: 12px 12px 0 0; padding: 14px; text-align: center; min-height: 95px; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
                     <div style="color:#FFEB3B; font-size:11px; font-weight:800;">🔬 BIOLOGI</div>
                     <div style="color:white; font-size:11px; font-weight:600; margin:3px 0;">4551/3</div>
                     <div style="color:#FFD700; font-size:20px; font-weight:900;">18 Nov 2026</div>
                     <div style="color:#FFF3E0; font-size:10px; font-weight:600; margin-top:2px;">Hari Rabu</div>
                 </div>
+                <div style="background:#FFF3E0; border:2px solid #EF6C00; border-top:none; border-radius:0 0 12px 12px; padding:8px; text-align:center; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
+                    <div style="color:#E65100; font-size:9px; font-weight:700;">JUMLAH CALON BIOLOGI</div>
+                    <div style="color:#EF6C00; font-size:18px; font-weight:900;">{calon_bio:,}</div>
+                    <div style="color:#546E7A; font-size:8px;">orang</div>
+                </div>
                 """, unsafe_allow_html=True)
             with j4:
                 st.markdown(f"""
-                <div style="background: linear-gradient(135deg, #8E24AA 0%, #6A1B9A 100%); border: 2.5px solid #FFD700; border-radius: 12px; padding: 14px; text-align: center; min-height: 95px; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
+                <div style="background: linear-gradient(135deg, #8E24AA 0%, #6A1B9A 100%); border: 2.5px solid #FFD700; border-radius: 12px 12px 0 0; padding: 14px; text-align: center; min-height: 95px; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
                     <div style="color:#FFEB3B; font-size:11px; font-weight:800;">🧬 SAINS TAMBAHAN</div>
                     <div style="color:white; font-size:11px; font-weight:600; margin:3px 0;">4561/3</div>
                     <div style="color:#FFD700; font-size:20px; font-weight:900;">19 Nov 2026</div>
                     <div style="color:#F3E5F5; font-size:10px; font-weight:600; margin-top:2px;">Hari Khamis</div>
+                </div>
+                <div style="background:#F3E5F5; border:2px solid #6A1B9A; border-top:none; border-radius:0 0 12px 12px; padding:8px; text-align:center; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
+                    <div style="color:#4A148C; font-size:9px; font-weight:700;">JUMLAH CALON ST</div>
+                    <div style="color:#6A1B9A; font-size:18px; font-weight:900;">{calon_st:,}</div>
+                    <div style="color:#546E7A; font-size:8px;">orang</div>
                 </div>
                 """, unsafe_allow_html=True)
             
